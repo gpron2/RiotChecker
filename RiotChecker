@@ -1,0 +1,114 @@
+import requests
+
+BLUE = 100
+RED = 200
+
+class Player:
+    def __init__(self, champ, summoner, team):
+        self.champ = champ
+        self.summoner = summoner
+        self.team = team
+
+    def __repr__(self): 
+        return "Champion:% s Summoner:% s \n" % (self.champ, self.summoner) 
+
+headers = {
+    "X-Riot-Token": "RGAPI-e7d2e32d-bd00-40a0-9c48-e24e2014991a"
+}
+
+def getSummonerByName():
+    summonerName = input("Enter summoner name to lookup:")
+    response = requests.get("https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/"+summonerName, headers=headers)
+    summonerInfo = response.json()
+    return summonerInfo["puuid"]
+
+def getSummonersById(participants):
+    print("Players in your summoner's most recent match:")
+    for player in participants:
+        response = requests.get("https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"+player, headers=headers)
+        playerInfo = response.json()
+        print(playerInfo["name"])
+
+
+
+def getRecentMatchInfo():
+    redTeam = []
+    blueTeam = []
+    winner: str
+    summonerPuuid = getSummonerByName()
+    response = requests.get("https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/"+summonerPuuid+"/ids?start=0&count=1", headers=headers)
+    matchId = response.json()
+    response2 = requests.get("https://americas.api.riotgames.com/lol/match/v5/matches/"+matchId[0], headers=headers)
+    matchInfo = response2.json()
+    participants = matchInfo["info"]["participants"]
+    # getSummonersById(participants)
+    print('Game mode: '+ matchInfo["info"]["gameMode"])
+    for player in participants:
+        if(int(player["teamId"]) == RED):
+            playerInfoObj = Player(player["championName"], player["summonerName"], "RED")
+            redTeam.append(playerInfoObj)
+        if(int(player["teamId"]) == BLUE):
+            playerInfoObj = Player(player["championName"], player["summonerName"], "BLUE")
+            blueTeam.append(playerInfoObj)
+    print("Red Team :", repr(redTeam))
+    print("Blue Team :", repr(blueTeam))
+    for team in matchInfo['info']['teams']:
+        if(team["win"] == True):
+            if(team["teamId"] == RED):
+                winner = "Red Team"
+            else:
+                winner = "Blue Team"
+    print("Winning Team: ", winner)
+
+
+
+def getFreeChampions():
+    #Get list of free champs
+    response = requests.get("https://na1.api.riotgames.com/lol/platform/v3/champion-rotations", headers=headers)
+    #Convert response to dict.
+    freeChampData = response.json()
+    print(freeChampData)
+    # Pull needed values from dict
+    freeChamps = freeChampData["freeChampionIds"]
+    newFreeChamps = freeChampData["freeChampionIdsForNewPlayers"]
+    print(freeChamps)
+    print(newFreeChamps)
+    #Lookup champion names using their ID
+    championIdResponse = requests.get("http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json")
+    championNamesJson = championIdResponse.json()
+    championNamesData = championNamesJson['data']
+    print('List of current free champions:')
+    for id in freeChamps:
+        for name, value in championNamesData.items():
+            if(id == int(value['key'])):
+                print(id, name)
+
+    print('List of current free champions for new players(Max lvl: 10):')
+    for id in newFreeChamps:
+        for name, value in championNamesData.items():
+            if(id == int(value['key'])):
+                print(id, name)
+    
+
+selection = input('''
+1. List free champions
+2. Lookup summoner
+3. Get recent match info
+Enter your selection:''')
+
+while(selection != '0'):
+    if(selection == '1'):
+        getFreeChampions()
+    elif(selection == '2'):
+        getSummonerByName()
+    elif(selection == '3'):
+        getRecentMatchInfo()
+    else:
+        print("Invalid selection")
+    
+    selection = input('''
+    1. List free champions
+    2. Lookup summoner
+    3. Get recent match info
+    Enter another selection:''')
+

@@ -1,5 +1,5 @@
 # RiotChecker
 
-# Run script: python3 RiotChecker
+Run script: python3 RiotChecker
 
-# Input selection from Menu
+Input selection from Menu

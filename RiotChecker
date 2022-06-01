@@ -13,7 +13,7 @@ class Player:
         return "Champion:% s Summoner:% s \n" % (self.champ, self.summoner) 
 
 headers = {
-    "X-Riot-Token": "RGAPI-e7d2e32d-bd00-40a0-9c48-e24e2014991a"
+    "X-Riot-Token": "your-key-here"
 }
 
 def getSummonerByName():
